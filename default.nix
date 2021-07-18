@@ -14,7 +14,7 @@ in with cfg; let
   }) (contrib + "/${p}") {};
 in {
   imports = mylib.hereFlatPaths ./modules
-         ++ pathElse lib.hereFlatPaths (contrib + "/modules") []
+         ++ pathElse mylib.hereFlatPaths (contrib + "/modules") []
          ++ [ (tackOn "dynamic.nix") (tackOn "dynamic") ];
   config = {
     nixpkgs.overlays = [
@@ -27,11 +27,5 @@ in {
        ++ pathElse super.lib.hereFlatList (contrib + "/overlays") []) self super
       )
     ];
-  };
-  options = {
-    stong.dynamic = lib.mkOption {
-      type = lib.types.attrs;
-      default = {};
-    };
   };
 } 
