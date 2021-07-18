@@ -1,0 +1,34 @@
+This is my personal module that I pass around from place to place. It can't
+really work as a channel or option-presenting module of its own, as half the
+point is to allow your imports to be a bit more dynamic, which it achieves by
+only depending on lib, the one constant in the fixed point outside of extraArgs.
+
+You can create a ``config'' named cfg.nix, which should be a bare attrset. The
+single meaningful value for now is "contrib", which sets the secondary search
+path. The primary search path is right here. The default value for "contrib"
+is ./contrib; both that and cfg.nix are ignored by version control. The
+contents of modules/ and overlays/ in both paths are searched, and, if they
+exist, appended respectively to `imports` in default.nix and a
+lib.composeManyExtensions call that creates one giant overlay.
+
+In overlays, super.lib is augmented with `mylib`. mylib.nixFiles in
+particular lets you get quite creative with structuring your overlays; see
+mylib/default.nix:/hereFlatPaths/ and mylib/default.nix:/hereFlatList/
+for how ./default.nix collects modules and overlays respectively. Note straight
+away that default.nix is ignored in the top level of modules and overlays.
+
+You can also create a dynamic.nix or a dynamic/default.nix in the contrib path.
+This also gets appended to imports in ./default.nix, but after being imported
+and applied with {pkgs, lib, config, options}, where lib is augmented with
+`mylib`. This is a catch-all where you can handle all those sprawling, nested
+bits that otherwise blow up configs.
+
+The intended contents of the primary and secondary paths are *personally* 
+universal and *personally* site-specific, respectively -- certainly do not view
+the primary as set in stone; hack away. A suggested value for "contrib" is ../.
+
+This whole thing came out of the seeming inability to set the contents of
+extraArgs without resorting to flakes or using wrapped/modified versions of
+the various rebuild scripts. In truth, once flakes hit stable and become less
+of a pain to use, this sort of solution should be considered obsolete.
+

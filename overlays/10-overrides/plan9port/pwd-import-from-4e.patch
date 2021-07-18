@@ -1,0 +1,55 @@
+From c153923a934fb567432fdcb3453627afc9484c1b Mon Sep 17 00:00:00 2001
+From: "Yestin L. Harrison" <yestin@ylh.io>
+Date: Sun, 11 Jul 2021 16:43:28 -0600
+Subject: [PATCH] pwd: import from 4e
+
+it can be useful to have this in $PLAN9/bin in multiple cases,
+such as building statically and shoving p9p in a chroot on
+various unices
+---
+ man/man1/pwd.1 |  4 ----
+ src/cmd/pwd.c  | 19 +++++++++++++++++++
+ 2 files changed, 19 insertions(+), 4 deletions(-)
+ create mode 100644 src/cmd/pwd.c
+
+diff --git a/man/man1/pwd.1 b/man/man1/pwd.1
+index e0a506fb..a1a0377b 100644
+--- a/man/man1/pwd.1
++++ b/man/man1/pwd.1
+@@ -20,7 +20,3 @@ such as constructing shell prompts.
+ in
+ .MR rc (1) ,
+ .MR getwd (3)
+-.SH BUGS
+-.I Pwd
+-is not provided.
+-Unix already provides one.
+diff --git a/src/cmd/pwd.c b/src/cmd/pwd.c
+new file mode 100644
+index 00000000..d485834b
+--- /dev/null
++++ b/src/cmd/pwd.c
+@@ -0,0 +1,20 @@
++#include <u.h>
++#include <libc.h>
++/*
++ * Print working (current) directory
++ */
++
++void
++main(int argc, char *argv[])
++{
++	char pathname[512];
++
++	USED(argc);
++	USED(argv);
++	if(getwd(pathname, sizeof(pathname)) == 0) {
++		fprint(2, "pwd: %r\n");
++		exits("getwd");
++	}
++	print("%s\n", pathname);
++	exits(0);
++}
+--
+2.32.0
+

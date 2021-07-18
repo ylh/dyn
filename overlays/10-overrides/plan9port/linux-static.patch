@@ -1,0 +1,13 @@
+diff --git a/bin/9l b/bin/9l
+index abca55fc..f5ffcbd4 100755
+--- a/bin/9l
++++ b/bin/9l
+@@ -23,7 +23,7 @@ case "$tag" in
+ 	nmflags="-B"
+ 	;;
+ *Linux*)
+-	ld="${CC9:-gcc} $CC9FLAGS"
++	ld="${CC9:-gcc} -static $CC9FLAGS"
+ 	userpath=true
+ 	extralibs="$extralibs -lutil -lresolv -lpthread"
+ 	;;

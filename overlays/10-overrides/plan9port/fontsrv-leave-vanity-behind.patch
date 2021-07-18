@@ -1,0 +1,48 @@
+From a7b83b959c0fd26646d055f8cd16824b1d466cba Mon Sep 17 00:00:00 2001
+From: "Yestin L. Harrison" <yestin@ylh.io>
+Date: Sun, 11 Jul 2021 17:47:11 -0600
+Subject: [PATCH] fontsrv: leave vanity behind
+
+---
+ src/cmd/fontsrv/mac.c | 6 ++++++
+ 1 file changed, 6 insertions(+)
+
+diff --git a/src/cmd/fontsrv/mac.c b/src/cmd/fontsrv/mac.c
+index c5a2e0f1..91d6353a 100644
+--- a/src/cmd/fontsrv/mac.c
++++ b/src/cmd/fontsrv/mac.c
+@@ -20,18 +20,23 @@ extern void CGFontGetGlyphsForUnichars(CGFontRef, const UniChar[], const CGGlyph
+ // In these fonts, it's too hard to distinguish U+2018 and U+2019,
+ // so don't map the ASCII quotes there.
+ // See https://github.com/9fans/plan9port/issues/86
++/*
+ static char *skipquotemap[] = {
+ 	"Courier",
+ 	"Osaka",
+ };
++*/
+
+ int
+ mapUnicode(char *name, int i)
+ {
++	/*
+ 	int j;
++	*/
+
+ 	if(0xd800 <= i && i < 0xe000) // surrogate pairs, will crash OS X libraries!
+ 		return 0xfffd;
++	/*
+ 	for(j=0; j<nelem(skipquotemap); j++) {
+ 		if(strstr(name, skipquotemap[j]))
+ 			return i;
+@@ -42,6 +47,7 @@ mapUnicode(char *name, int i)
+ 	case '`':
+ 		return 0x2018;
+ 	}
++	*/
+ 	return i;
+ }
+
+--
+2.32.0
+
