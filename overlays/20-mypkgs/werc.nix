@@ -21,7 +21,7 @@ let
     m = if members != null then lines members else null;
     e = n: c: optional (c != null) "echo ${escapeShellArg c} > ${d}/${n}";
   in lines ([ "mkdir ${d}" ] ++ e "members" m ++ e "password" password))
-           etcpop.users);
+           etcpop.users or {});
 
 in stdenv.mkDerivation rec {
   pname = "werc";
