@@ -3,15 +3,15 @@
 
 buildGoPackage rec {
   pname = "cgd";
-  version = "2012-09-18";
-  rev = "c08b219280fb87f64df7aa356300efefca528401";
-
-  goPackagePath = "github.com/uriel/cgd";
+  version = "2021-07-26";
+  rev = "53c82b60590f292fdff27adb59dbf960fb95c66e";
+  
+  goPackagePath = "github.com/ylh/cgd";
 
   src = fetchgit {
     inherit rev;
-    url = "https://github.com/uriel/cgd";
-    sha256 = "1qa9phkx1z9vyb8f9jv2r8q89alwxyask6d0f2g51rlixl9n5qpx";
+    url = "https://${goPackagePath}";
+    sha256 = "15652pxa2ii95mz7bbnfcby7s896xp20rb23i7k2mnr2k9rhkysg";
   };
 
   meta = {
