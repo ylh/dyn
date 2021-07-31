@@ -2,9 +2,9 @@
   contrib ? ../.,         # secondary search path
   excl ? [],              # files to exclude from search
   defaultExcludes ? true, # you do not want to set this to false
-  pinnedImports ? [],     # pin home-manager etc here
+  imports ? [],           # pin home-manager etc here
   unstable ? null,        # need unstable? pin its derivation here
-  enhancePins ? false,    # add mylib to pinnedImports. generally unnecessary
+  enhancePins ? false,    # add mylib to imports. generally unnecessary
   others ? false,         # do not present as a singleton list
   ...
 }:
@@ -28,9 +28,9 @@ let me = { lib, pkgs, ... }: let
     mylib.hereFlatPaths (mylib.listingExcept contrib excludes);
 in {
   imports = map enhance paths ++ (if enhancePins then
-    map enhance pinnedImports
+    map enhance imports
   else
-    pinnedImports);
+    imports);
   nixpkgs.overlays = [
     (self: super: {
       unstablePath = if unstable == null then
