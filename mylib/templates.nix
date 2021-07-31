@@ -32,4 +32,26 @@
       Install.WantedBy = [ "default.target" ];
     };
   };
+  literalText = attrs: let
+    eq = k: v: "${k}=${v}";
+    join = name: value: if builtins.isList value then
+      lib.concatMapStringsSep "\n" (value': eq name value') value
+    else
+      eq name value;
+  in lib.concatStringsSep "\n" (lib.mapAttrsToList join attrs);
+  
+  noManual = {
+    html.enable = false;
+    json.enable = false;
+    manpages.enable = false;
+  };
+  passwd = {
+    name ? "", pass ? "", uid ? "", gid ? "",
+    desc ? "", home ? "", shell ? "", extra ? ""
+  }: let
+    u = builtins.toString uid;
+    g = builtins.toString gid;
+    l = [ name pass u g desc home shell ] ++ lib.optional (extra != "") extra;
+  in lib.concatStringsSep ":" l + "\n";
+  passwds = lib.concatMapStrings passwd;
 }

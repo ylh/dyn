@@ -5,7 +5,9 @@ buildGoPackage rec {
   pname = "cgd";
   version = "2021-07-26";
   rev = "53c82b60590f292fdff27adb59dbf960fb95c66e";
-  
+  preBuild = ''
+    export CGO_ENABLED=0
+  '';
   goPackagePath = "github.com/ylh/cgd";
 
   src = fetchgit {
