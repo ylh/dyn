@@ -1,4 +1,4 @@
-{ stdenv, lib, variant ? null, plan9port, ed, etcpop ? { }, perl }:
+{ stdenv, lib, variant ? null, plan9port, ed, gawk, coreutils, perl, etcpop ? { } }:
 
 assert lib.elem variant [ null "perl" ];
 
@@ -13,7 +13,9 @@ let
   ] ++ optional (variant != "perl") "bin/contrib/markdown.pl");
 
   initrc = ''
-    plan9port=${plan9port}/plan9
+    . ${plan9port}/plan9/bin/9.rc
+    coreutils=${coreutils}
+    plan9port=$PLAN9;
   '' + etcpop.initrc or "";
 
   users = lines (mapAttrsToList (username: { members, password }: let
@@ -31,7 +33,7 @@ in stdenv.mkDerivation rec {
     url = "http://werc.cat-v.org/download/werc-${version}.tar.gz";
     sha256 = "0ci86y5983ziyjvz8099p3bqryrq5w2z1wg4jmm8gdbbhvgk4fr6";
   };
-  buildInputs = [ plan9port ed ] ++ optional (variant == "perl") perl;
+  buildInputs = [ plan9port ed gawk ] ++ optional (variant == "perl") perl;
 
   phases = "unpackPhase configurePhase installPhase fixupPhase";
   configurePhase = ''
@@ -44,11 +46,12 @@ in stdenv.mkDerivation rec {
     cp -r apps bin etc lib pub tpl $out/
   '';
   fixupPhase = ''
+    cd $out
     do_ed() { echo "$1"$'\nwq\n' | ed -s $f; }
     fixup9() {
       for f in `grep -l -r '^#!.*/'$1 .`; do
         local p=`sed 1q $f`
-        do_ed "/$1/s,[^[:space:]]*,#!${plan9port}/bin/$1," $f
+        do_ed "/$1/s,[^[:space:]]*,#!${plan9port}/plan9/bin/$1," $f
         local n=`sed 1q $f`
         echo "$f: interpreter directive changed from \"$p\" to \"$n\""
       done
@@ -57,8 +60,17 @@ in stdenv.mkDerivation rec {
     fixup9 rc
     f=./bin/werc.rc
     p=`sed -n /pwd/p $f`
-    do_ed '/`{pwd}/s,pwd,${plan9port}/bin/pwd,' $f
+    do_ed '/`{pwd}/s,pwd,${plan9port}/plan9/bin/pwd,' $f
     n=`sed -n /pwd/p $f`
     echo "$f: call changed from \"$p\" to \"$n\""
+    f=./bin/cgilib.rc
+    cgilib() {
+      p=`awk '/ \/bin\/echo/ {print; exit}' $f`
+      do_ed '/ \/bin\/echo/s,/bin/echo,${plan9port}/plan9/bin/echo,' $f
+      n=`awk '/plan9\/bin\/echo/ && ++n == '$1' {print; exit}' $f`
+      echo "$f: call changed from \"$p\" to \"$n\""
+    }
+    cgilib 1
+    cgilib 2
   '';
 }

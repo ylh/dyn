@@ -13,31 +13,39 @@ in (lib.makeExtensible (self: lib)).extend (lib.composeManyExtensions [
     in lib.flatten (recurse attrs);
   }))
   (extFn "nixFiles" ({lib, ...}: let
-    # idempotent transforms to cache the result of readDir without making here'
-    # too baroque. reusing "default.nix" might seem cheeky, but it's the one
-    # name we can actually guarantee is never in contention
-    listingOf = d: if isPath d then { "default.nix" = d; } // readDir d else d;
-    pathOf = d: if isPath d then d else d."default.nix";
-
+    listingOf = d: if isPath d then { listing = readDir d; path = d; } else d;
     # we return paths here instead of permitting any direct mapping as that
     # introduces some weird strictness, presumably originating in list length?
-    here' = d: lib.filterAttrs (_n: v: v != null) (lib.mapAttrs' (n: v:
-      let newPath = pathOf d + "/${n}"; in
+    here' = { listing, path }: let results = lib.mapAttrs' (n: v:
+      let path' = path + "/${n}"; in
       if v == "directory" then
-        let newListing = listingOf newPath; in
-        lib.nameValuePair n (if isString newListing."default.nix" then
-          newPath
-        else
-          (x: if x == {} then null else x) (here' newListing))
+        let
+          listing' = readDir path';
+          v' = if listing' ? "default.nix" then
+            path'
+          else
+            (x: if x == {} then null else x) (here' {
+              listing = listing';
+              path = path';
+            });
+        in lib.nameValuePair n v'
       else if v == "regular" && lib.hasSuffix ".nix" n then
-        lib.nameValuePair (lib.removeSuffix ".nix" n) newPath
+        lib.nameValuePair (lib.removeSuffix ".nix" n) path'
       else
-        lib.nameValuePair n null) (listingOf d));
+        lib.nameValuePair n null) listing;
+    in lib.filterAttrs (_n: v: v != null) results;
+    
   in rec {
+    inherit listingOf;
+    listingExcept = d: l: ({ listing, path }: {
+      listing = removeAttrs listing l;
+      inherit path;
+    }) (listingOf d);
+    
     # fundamental structure: traverses a directory tree, searching for nix
     # files or directories containing default.nix, producing an attr tree
     # with import paths as leaves
-    herePaths = d: here' (readDir d // { "default.nix" = d; });
+    herePaths = d: here' (listingExcept d [ "default.nix" ]);
     
     # like herePaths, but the paths are imported
     here = hereMap lib.id;
