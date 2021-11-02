@@ -1,8 +1,12 @@
 self: super: let
-	special = {
-		osxutils = {
-			inherit (super.darwin.apple_sdk.frameworks) Carbon Cocoa;
-		};
-	};
-	call = (n: v: super.callPackage v (special.${n} or {}));
+  frameworks = super.darwin.apple_sdk.frameworks;
+  special = {
+    osxutils = {
+      inherit (frameworks) Carbon Cocoa;
+    };
+    daemondo = {
+      inherit (frameworks) CoreFoundation SystemConfiguration IOKit;
+    };
+  };
+  call = (n: v: super.callPackage v (special.${n} or {}));
 in super.lib.hereFlatAttrsMap call ./.

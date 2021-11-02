@@ -1,10 +1,17 @@
 { lib, ... }: rec {
-  launchdBasic = argv: {
+  launchdForeground = argv: {
     serviceConfig = {
       ProgramArguments = argv;
       RunAtLoad = true;
       KeepAlive = true;
       ProcessType = "Background";
+    };
+  };
+  launchdDaemon = argv: {
+    serviceConfig = {
+      ProgramArguments = argv;
+      RunAtLoad = true;
+      KeepAlive = true;
     };
   };
   sysUser = pkgs: kw:
