@@ -17,8 +17,8 @@ buildGoPackage rec {
   };
 
   meta = {
-  	description = "A daemon that can serve a CGI script over HTTP or FastCGI";
-  	homepage = "http://repo.cat-v.org/cgd/";
-  	license = lib.licenses.publicDomain;
+    description = "A daemon that can serve a CGI script over HTTP or FastCGI";
+    homepage = "http://repo.cat-v.org/cgd/";
+    license = lib.licenses.publicDomain;
   };
 }
