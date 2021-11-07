@@ -16,9 +16,11 @@ buildGoPackage rec {
     sha256 = "15652pxa2ii95mz7bbnfcby7s896xp20rb23i7k2mnr2k9rhkysg";
   };
 
-  meta = {
+  meta = with lib; {
     description = "A daemon that can serve a CGI script over HTTP or FastCGI";
     homepage = "http://repo.cat-v.org/cgd/";
     license = lib.licenses.publicDomain;
+    platforms = platforms.unix;
+    maintainers = [ maintainers.ylh ];
   };
 }

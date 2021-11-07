@@ -1,29 +1,29 @@
-{stdenv, lib, autoreconfHook, pkg-config, zlib, openssl, osxfuse}:
+{stdenv, lib, fetchFromGitHub, autoreconfHook, pkg-config, zlib, openssl, macfuse-stubs, libfuse}:
 
 stdenv.mkDerivation rec {
-  pname = "osxutils";
+  pname = "libfsapfs";
   version = "2021-09-01";
-/*
+
   src = fetchFromGitHub {
     owner = "libyal";
     repo = pname;
-    rev = "c913629c0c14180f115f74313250e770f911ca46";
-    sha256 = "1fgcv2g4w5gr2dfx472izry8gnglss2vj4q2yw44j9sbck6r3xsh";
-  };
-*/
-  src = builtins.fetchurl {
-    url = "https://github.com/libyal/libfsapfs/releases/download/20210424/libfsapfs-experimental-20210424.tar.gz";
-    sha256 = "0vr2a65yymsy5i9smzysgdbx65lb5yvmrlh0i8gvj6qs0hr08bwx";
+    rev = "11c961ff4379d0317ea6748f984e996f816ded12";
+    sha256 = "06dsdbd2lm47rn9yb134yvfh9dsgcm5y9dnd2pp8zwv1nsddb2q1";
   };
 
-  buildInputs = [ autoreconfHook pkg-config zlib openssl osxfuse ];
+  buildInputs = [ autoreconfHook pkg-config zlib openssl (
+    if stdenv.isDarwin then
+      macfuse-stubs
+    else
+      libfuse
+  ) ];
   preConfigure = [ "autoconf" ];
-# configureFlags = [ "--prefix=${placeholder "out"}" ];
-  
+
   meta = with lib; {
     description = "Library and tools to access the Apple File System";
     homepage = "https://github.com/libyal/libfsapfs";
     license = licenses.lgpl3;
-    platforms = platforms.darwin;
+    platforms = [ platforms.darwin platforms.linux ];
+    maintainers = [ maintainers.ylh ];
   };
 }

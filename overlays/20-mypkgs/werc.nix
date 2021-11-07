@@ -5,7 +5,7 @@ assert lib.elem variant [ null "perl" ];
 let
   inherit (lib) concatStringsSep escapeShellArg mapAttrsToList optional;
   lines = concatStringsSep "\n";
-  
+
   removals = concatStringsSep " " ([
     "etc/users/GROUP_AND_USER_ACCOUNTS"
     "bin/aux"
@@ -73,4 +73,11 @@ in stdenv.mkDerivation rec {
     cgilib 1
     cgilib 2
   '';
+  meta = with lib; {
+    description = "CGI web framework written in the Plan 9 shell";
+    homepage = "http://werc.cat-v.org/";
+    license = licenses.publicDomain;
+    platforms = plan9port.meta.platforms;
+    maintainers = [ maintainers.ylh ];
+  };
 }

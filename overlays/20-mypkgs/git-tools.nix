@@ -20,5 +20,12 @@ stdenv.mkDerivation rec {
     cp git-* $out/bin/
     installManPage man1/*.1
   '';
-    
+
+  meta = with lib; {
+    description = "Assorted git-related scripts (home of git-restore-mtime)";
+    homepage = "https://github.com/MestreLion/git-tools/";
+    license = lib.licenses.gpl3;
+    platforms = platforms.unix;
+    maintainers = [ maintainers.ylh ];
+  };
 }

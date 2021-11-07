@@ -34,24 +34,24 @@ in (lib.makeExtensible (self: lib)).extend (lib.composeManyExtensions [
       else
         lib.nameValuePair n null) listing;
     in lib.filterAttrs (_n: v: v != null) results;
-    
+
   in rec {
     inherit listingOf;
     listingExcept = d: l: ({ listing, path }: {
       listing = removeAttrs listing l;
       inherit path;
     }) (listingOf d);
-    
+
     # fundamental structure: traverses a directory tree, searching for nix
     # files or directories containing default.nix, producing an attr tree
     # with import paths as leaves
     herePaths = d: here' (listingExcept d [ "default.nix" ]);
-    
+
     # like herePaths, but the paths are imported
     here = hereMap lib.id;
     # like `here`, but map f over imported expressions
     hereMap = f: d: lib.mapAttrsRecursive (_n: p: f (import p)) (herePaths d);
-    
+
     # just a list of import paths, such as for module imports lists
     hereFlatPaths = d: lib.flattenToList (_n: v: v) (herePaths d);
     # just the imports in a flat list, e.g. for defining overlay order by
@@ -59,7 +59,7 @@ in (lib.makeExtensible (self: lib)).extend (lib.composeManyExtensions [
     hereFlatList = hereFlatMap (_n: v: v);
     # like hereFlatList, but mapped with f :: (n: v: result)
     hereFlatMap = f: d: lib.flattenToList f (here d);
-    
+
     # like hereFlatList, except a 1-deep attribute set 
     hereFlatAttrs = d: listToAttrs (hereFlatMap lib.nameValuePair d);
     # like hereFlatAttrs, but mapped with f :: (n: v: result)

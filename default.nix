@@ -16,7 +16,7 @@ let me = { lib, pkgs, ... }: let
   pathElse = f: p: d: if pathExists p then f p else d;
   mylib' = import ./mylib;
   mylib = mylib' { inherit lib; };
-  
+
   enhance' = mylib.applyIf lib.isFunction (m': let
     initArgs = lib.functionArgs m';
   in mylib.applyIf' (initArgs ? "lib") (m:

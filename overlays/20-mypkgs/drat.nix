@@ -19,8 +19,8 @@ stdenv.mkDerivation rec {
   buildInputs = [ argp-standalone ];
   configurePhase = [];
   meta = with lib; {
-    description = "Library and tools to access the Apple File System";
-    homepage = "https://github.com/libyal/libfsapfs";
+    description = "Utility for performing data recovery and analysis of APFS partitions/containers";
+    homepage = "https://github.com/jivanpal/drat";
     license = licenses.lgpl3;
     platforms = platforms.darwin;
   };

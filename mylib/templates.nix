@@ -46,7 +46,7 @@
     else
       eq name value;
   in lib.concatStringsSep "\n" (lib.mapAttrsToList join attrs);
-  
+
   noManual = {
     html.enable = false;
     json.enable = false;
