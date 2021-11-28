@@ -1,0 +1,27 @@
+From b7545c6220a38021b2791ada8260990230119dcd Mon Sep 17 00:00:00 2001
+From: "Yestin L. Harrison" <yestin@ylh.io>
+Date: Thu, 18 Nov 2021 19:48:03 -0800
+Subject: [PATCH] fontsrv: slightly fudge height numbers
+
+---
+ src/cmd/fontsrv/mac.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/src/cmd/fontsrv/mac.c b/src/cmd/fontsrv/mac.c
+index c5a2e0f1..53a80b4d 100644
+--- a/src/cmd/fontsrv/mac.c
++++ b/src/cmd/fontsrv/mac.c
+@@ -191,8 +191,8 @@ fontheight(XFont *f, int size, int *height, int *ascent)
+ 	bbox.size.width -= bbox.origin.x;
+ 	bbox.size.height -= bbox.origin.y;
+ 
+-	*height = bbox.size.height + 0.999999;
+-	*ascent = *height - (-bbox.origin.y + 0.999999);
++	*height = bbox.size.height + 0.25;
++	*ascent = *height - (-bbox.origin.y + 0.25);
+ 
+ 	CGContextRelease(ctxt);
+ 	CFRelease(font);
+-- 
+2.33.1
+
