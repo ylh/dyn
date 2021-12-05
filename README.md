@@ -74,7 +74,12 @@ parameters). Default: `[]`
 `unstablePath` in `pkgs` by way of an overlay. Default: `null`
 
 `others`
-: Prevent `dyn` from wrapping itself in a list when imported, Default: `false`
+: Prevent `dyn` from wrapping itself in a list when imported. Default: `false`
+
+`contagious`
+: Add `dyn` as a weird little library available as a module argument to
+“enhanced” modules, letting them perform “enhancement” themselves.
+Default: `false`
 
 How It Works
 ------------
