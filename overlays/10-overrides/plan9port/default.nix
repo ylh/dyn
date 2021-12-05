@@ -1,8 +1,5 @@
-self: super: let
-  lib = super.lib;
-  lastby = sep: x: lib.last (lib.splitString sep x);
-in super.plan9port.overrideAttrs (_old: rec {
-  patches = [
+self: { plan9port, ... }: plan9port.overrideAttrs ({ patches ? [], ... }: {
+  patches = patches ++ [
     ./acme-backport-9front-spacesindent.patch
     ./pwd-import-from-4e.patch
     ./fontsrv-slightly-fudge-height-numbers.patch
