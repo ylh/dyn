@@ -118,7 +118,7 @@ in {
       type = package;
       default = pkgs.werc;
       defaultText = "pkgs.werc";
-      example = literalExample ''
+      example = literalExpression ''
         pkgs.werc.override {
           plan9port = pkgs.plan9port-static;
         }
