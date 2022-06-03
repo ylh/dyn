@@ -1,5 +1,5 @@
 {lib, ...}:
-builtins.import (builtins.toFile "garbops.nix" "{${
+builtins.import (builtins.toFile "ops_eval.nix" "{${
   builtins.toString ((map (s: "\"${s}\" = x: y: x ${s} y;") [
     "." " " "?" "++" "*" "/" "+" "-"
     "<" "<=" ">" ">=" "==" "!=" "&&" "||" "->"

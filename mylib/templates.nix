@@ -1,12 +1,4 @@
 { lib, ... }: rec {
-  launchdForeground = argv: {
-    serviceConfig = {
-      ProgramArguments = argv;
-      RunAtLoad = true;
-      KeepAlive = true;
-      ProcessType = "Background";
-    };
-  };
   launchdDaemon = argv: {
     serviceConfig = {
       ProgramArguments = argv;
@@ -14,9 +6,14 @@
       KeepAlive = true;
     };
   };
+  launchdForeground = argv:
+    lib.recursiveUpdate
+      (launchdDaemon argv)
+      ({ serviceConfig.ProcessType = "Background"; });
+
   sysUser = pkgs: kw:
     let t = "${kw}.target";
-    systemctl= "${pkgs.systemd}/bin/systemctl";
+    systemctl = "${pkgs.systemd}/bin/systemctl";
     echo = "${pkgs.coreutils}/bin/echo";
     sleep = "${pkgs.coreutils}/bin/sleep";
   in {
@@ -39,6 +36,7 @@
       Install.WantedBy = [ "default.target" ];
     };
   };
+
   literalText = attrs: let
     eq = k: v: "${k}=${v}";
     join = name: value: if builtins.isList value then
@@ -52,6 +50,7 @@
     json.enable = false;
     manpages.enable = false;
   };
+
   passwd = {
     name ? "", pass ? "", uid ? "", gid ? "",
     desc ? "", home ? "", shell ? "", extra ? ""
@@ -60,5 +59,6 @@
     g = builtins.toString gid;
     l = [ name pass u g desc home shell ] ++ lib.optional (extra != "") extra;
   in lib.concatStringsSep ":" l + "\n";
+
   passwds = lib.concatMapStrings passwd;
 }
