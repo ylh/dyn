@@ -13,7 +13,6 @@ with lib.types;
 
 let
   cfg = config.programs.werc;
-  stong = lib;
 
   userOpts = { config, lib, pkgs, ... }: {
     options.members = mkOption {
@@ -77,7 +76,7 @@ in {
         Included in werc are <filename>markdown.pl</filename>, the original
         perl markdown implementation from daringfireball, which will add perl
         to werc's runtime dependencies, and <filename>md2html.awk</filename>,
-        which is compatible with both plan9port and GNU/BSD/etc awk.
+        which is compatible with awk from either plan9port or GNU/BSD/etc.
         Alternatively, set the name to any formatter in
         <literal>extraPath</literal>. It must be the basename of the
         executable, as <literal>fltr_cache</literal> will use it to name the
