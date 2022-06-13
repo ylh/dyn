@@ -33,7 +33,7 @@ in {
       Turn on top-level aliases for home-manager
     '';
   };
-  
+
   config.home-manager.users.${config.me} = mkIf config.home-aliases.enable (
     mkMerge [
       ({ ... }: { manual = lib.noManual; programs.man.enable = false; })

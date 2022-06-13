@@ -20,14 +20,14 @@ Basic Usage
 Put this directory next to your `configuration.nix`, in which you set:
 
     imports = import ./dyn {};
-    
+
 Something more involved on, say, a stable NixOS, might be:
 
     imports = import ./dyn {
       unstable = /* your pinned nixos-unstable here */;
       imports = [ "${/* your pinned home-manager here */}/nixos" ];
     };
-    
+
 In either case, you read that right - `dyn` presents as a list containing
 the real `dyn` module by default; it's just cleaner that way. Once you've done
 this, `dyn` will bring in everything it finds, including
@@ -84,7 +84,7 @@ Default: `false`
 How It Works
 ------------
 
-The search process is specified in `lib.nixFiles`, which is defined and 
+The search process is specified in `lib.nixFiles`, which is defined and
 documented in `mylib/default.nix`. Roughly speaking, though, a given file tree
 is traversed, terminating at any file with a `.nix` extension, or any directory
 containing a `default.nix`. Regular files that don't end in `.nix` are ignored;

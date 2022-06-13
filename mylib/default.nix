@@ -60,7 +60,7 @@ in (lib.makeExtensible (self: lib)).extend (lib.composeManyExtensions [
     # like hereFlatList, but mapped with f :: (n: v: result)
     hereFlatMap = f: d: lib.flattenToList f (here d);
 
-    # like hereFlatList, except a 1-deep attribute set 
+    # like hereFlatList, except a 1-deep attribute set
     hereFlatAttrs = d: listToAttrs (hereFlatMap lib.nameValuePair d);
     # like hereFlatAttrs, but mapped with f :: (n: v: result)
     hereFlatAttrsMap = f: d: listToAttrs (hereFlatMap

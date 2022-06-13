@@ -20,7 +20,7 @@ let
       default = null;
       example = [ "benry" "gordon" "bubby" "tommy" ];
       description = ''
-        Names of users in the respective group. <literal>null</literal> is 
+        Names of users in the respective group. <literal>null</literal> is
         distinct from an empty list; the latter still produces a
         <filename>members</filename> file, just empty.
       '';

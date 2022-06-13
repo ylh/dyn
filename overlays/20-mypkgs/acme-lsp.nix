@@ -2,7 +2,7 @@
 buildGoApplication rec {
   pname = "acme-lsp";
   version = "2022-05-03";
-  
+
   src = fetchFromGitHub {
     owner = "fhs";
     repo = pname;
@@ -10,6 +10,6 @@ buildGoApplication rec {
     sha256 = "1ycd20myyg7434ycg8ahihydgb4byq1gm0qqxc2p09j793yskvxg";
   };
   modules = /Users/ylh/git/acme-lsp/gomod2nix.toml;
-  
+
   doCheck = false; # wants pyls which we can't build
 }
