@@ -1,0 +1,134 @@
+From 44390fd0ba5dbef86eedc63b8cdf6b80342d6488 Mon Sep 17 00:00:00 2001
+From: "Yestin L. Harrison" <yestin@ylh.io>
+Date: Thu, 16 Jun 2022 18:04:12 -0700
+Subject: [PATCH] devdraw/mac_screen.m: 3-finger middle click (takes precedence
+ over tap)
+
+---
+ src/cmd/devdraw/mac-screen.m | 64 ++++++++++++++++++++++++++++++++++--
+ 1 file changed, 62 insertions(+), 2 deletions(-)
+
+diff --git a/src/cmd/devdraw/mac-screen.m b/src/cmd/devdraw/mac-screen.m
+index 9e51eec6..24ee0a1c 100644
+--- a/src/cmd/devdraw/mac-screen.m
++++ b/src/cmd/devdraw/mac-screen.m
+@@ -14,6 +14,7 @@
+ #include <libc.h>
+ #include <thread.h>
+ #include <draw.h>
++#include <math.h>
+ #include <memdraw.h>
+ #include <memlayer.h>
+ #include <mouse.h>
+@@ -180,6 +181,7 @@ rpc_shutdown(void)
+ - (void)setcursor:(Cursor*)c cursor2:(Cursor2*)c2;
+ - (void)setmouse:(Point)p;
+ - (void)clearInput;
++- (void)updateFingers:(NSEvent*)e;
+ - (void)getmouse:(NSEvent*)e;
+ - (void)sendmouse:(NSUInteger)b;
+ - (void)resetLastInputRect;
+@@ -193,6 +195,8 @@ rpc_shutdown(void)
+ 	NSRange _selectedRange;
+ 	NSRect _lastInputRect;	// The view is flipped, this is not.
+ 	BOOL _tapping;
++	BOOL _simMiddle;
++	NSUInteger _clickFingers;
+ 	NSUInteger _tapFingers;
+ 	NSUInteger _tapTime;
+ }
+@@ -650,10 +654,54 @@ rpc_resizewindow(Client *c, Rectangle r)
+ 		[[self window] toggleFullScreen:nil];
+ }
+ 
++/* macos handily palm-rejects 1 and 2 finger clicks; we're on our own for 3+.
++   naive clustering against O(n^2) average distance is fine since n is small */
++static int
++viabletouches(NSSet<NSTouch *> *ts)
++{
++	int cluster[10], members[10], i, j, ntouches, cid, newcid, max, a;
++	CGPoint ps[10];
++	NSTouch *t;
++	float avgdist, ds[45 /* tri(9) */], *dp;
++
++	if(ts.count > 10 || ts.count <= 2)
++		return ts.count;
++
++	ntouches = 0;
++	for(t in ts)
++		ps[ntouches++] = t.normalizedPosition;
++
++	for(i=0, dp=ds, avgdist=0.0; i<ntouches; i++)
++		for(j=i+1; j<ntouches; j++)
++			avgdist += *dp++ = hypot(ps[i].x - ps[j].x, ps[i].y - ps[j].y);
++	avgdist /= (ntouches * (ntouches - 1))/2;
++
++	memset(members, 0, sizeof *members * ntouches);
++	memset(cluster, 0, sizeof *cluster * ntouches);
++	for(i=0, dp=ds, newcid=max=1; i<ntouches; i++)
++		for(j=i+1; a=0, j<ntouches; j++)
++			*dp++ < avgdist &&
++			(cid = (a += !cluster[j]) && cluster[i] ?
++				cluster[j] = cluster[i]
++			: (a += !cluster[i]) && cluster[j] ?
++				cluster[i] = cluster[j]
++			: a == 2 ?
++				cluster[i] = cluster[j] = newcid++
++			: 0) &&
++			(max = (members[--cid] += a) > max ? members[cid] : max);
++	return max;
++}
++
++- (void)updateFingers:(NSEvent*)e
++{
++	_clickFingers = viabletouches([e touchesMatchingPhase:NSTouchPhaseTouching inView:nil]);
++}
++
+ - (void)touchesBeganWithEvent:(NSEvent*)e
+ {
+ 	_tapping = YES;
+-	_tapFingers = [e touchesMatchingPhase:NSTouchPhaseTouching inView:nil].count;
++	[self updateFingers:e];
++	_tapFingers = _clickFingers;
+ 	_tapTime = msec();
+ }
+ - (void)touchesMovedWithEvent:(NSEvent*)e
+@@ -662,8 +710,9 @@ rpc_resizewindow(Client *c, Rectangle r)
+ }
+ - (void)touchesEndedWithEvent:(NSEvent*)e
+ {
++	[self updateFingers:e];
+ 	if(_tapping
+-		&& [e touchesMatchingPhase:NSTouchPhaseTouching inView:nil].count == 0
++		&& _clickFingers == 0
+ 		&& msec() - _tapTime < 250){
+ 		switch(_tapFingers){
+ 		case 3:
+@@ -682,6 +731,7 @@ rpc_resizewindow(Client *c, Rectangle r)
+ - (void)touchesCancelledWithEvent:(NSEvent*)e
+ {
+ 	_tapping = NO;
++	_tapFingers = _clickFingers = 0;
+ }
+ 
+ - (void)getmouse:(NSEvent *)e
+@@ -702,6 +752,16 @@ rpc_resizewindow(Client *c, Rectangle r)
+ 		if(m & NSEventModifierFlagCommand)
+ 			b = 4;
+ 	}
++	if(b && _clickFingers == 3){
++		_tapping = NO;
++		_simMiddle = YES;
++	}
++	if(_simMiddle){
++		if(b)
++			b = 2;
++		else
++			_simMiddle = NO;
++	}
+ 	[self sendmouse:b];
+ }
+ 
+-- 
+2.36.1
+
