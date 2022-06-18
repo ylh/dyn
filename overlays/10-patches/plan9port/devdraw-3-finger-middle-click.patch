@@ -1,15 +1,15 @@
-From 44390fd0ba5dbef86eedc63b8cdf6b80342d6488 Mon Sep 17 00:00:00 2001
+From 449082367758b926649a0dc810b2b32775d7d12a Mon Sep 17 00:00:00 2001
 From: "Yestin L. Harrison" <yestin@ylh.io>
 Date: Thu, 16 Jun 2022 18:04:12 -0700
 Subject: [PATCH] devdraw/mac_screen.m: 3-finger middle click (takes precedence
  over tap)
 
 ---
- src/cmd/devdraw/mac-screen.m | 64 ++++++++++++++++++++++++++++++++++--
- 1 file changed, 62 insertions(+), 2 deletions(-)
+ src/cmd/devdraw/mac-screen.m | 70 ++++++++++++++++++++++++++++++++++--
+ 1 file changed, 68 insertions(+), 2 deletions(-)
 
 diff --git a/src/cmd/devdraw/mac-screen.m b/src/cmd/devdraw/mac-screen.m
-index 9e51eec6..24ee0a1c 100644
+index 9e51eec6..519478be 100644
 --- a/src/cmd/devdraw/mac-screen.m
 +++ b/src/cmd/devdraw/mac-screen.m
 @@ -14,6 +14,7 @@
@@ -37,51 +37,57 @@ index 9e51eec6..24ee0a1c 100644
  	NSUInteger _tapFingers;
  	NSUInteger _tapTime;
  }
-@@ -650,10 +654,54 @@ rpc_resizewindow(Client *c, Rectangle r)
+@@ -650,10 +654,60 @@ rpc_resizewindow(Client *c, Rectangle r)
  		[[self window] toggleFullScreen:nil];
  }
  
 +/* macos handily palm-rejects 1 and 2 finger clicks; we're on our own for 3+.
 +   naive clustering against O(n^2) average distance is fine since n is small */
-+static int
-+viabletouches(NSSet<NSTouch *> *ts)
-+{
-+	int cluster[10], members[10], i, j, ntouches, cid, newcid, max, a;
-+	CGPoint ps[10];
-+	NSTouch *t;
-+	float avgdist, ds[45 /* tri(9) */], *dp;
-+
-+	if(ts.count > 10 || ts.count <= 2)
-+		return ts.count;
-+
-+	ntouches = 0;
-+	for(t in ts)
-+		ps[ntouches++] = t.normalizedPosition;
-+
-+	for(i=0, dp=ds, avgdist=0.0; i<ntouches; i++)
-+		for(j=i+1; j<ntouches; j++)
-+			avgdist += *dp++ = hypot(ps[i].x - ps[j].x, ps[i].y - ps[j].y);
-+	avgdist /= (ntouches * (ntouches - 1))/2;
-+
-+	memset(members, 0, sizeof *members * ntouches);
-+	memset(cluster, 0, sizeof *cluster * ntouches);
-+	for(i=0, dp=ds, newcid=max=1; i<ntouches; i++)
-+		for(j=i+1; a=0, j<ntouches; j++)
-+			*dp++ < avgdist &&
-+			(cid = (a += !cluster[j]) && cluster[i] ?
-+				cluster[j] = cluster[i]
-+			: (a += !cluster[i]) && cluster[j] ?
-+				cluster[i] = cluster[j]
-+			: a == 2 ?
-+				cluster[i] = cluster[j] = newcid++
-+			: 0) &&
-+			(max = (members[--cid] += a) > max ? members[cid] : max);
-+	return max;
-+}
-+
 +- (void)updateFingers:(NSEvent*)e
 +{
-+	_clickFingers = viabletouches([e touchesMatchingPhase:NSTouchPhaseTouching inView:nil]);
++	int assign[10], card[10], amask, i, j, nt, cid, newcid, max, maxtmp;
++	CGPoint ps[10];
++	NSSet<NSTouch *> *ts;
++	NSTouch *t;
++	float avg, dists[45 /* 10 choose 2 */], *dp;
++
++	ts = [e touchesMatchingPhase:NSTouchPhaseTouching inView:nil];
++
++	if(ts.count > 10 || ts.count <= 2){
++		_clickFingers = ts.count;
++		return;
++	}
++
++	nt = 0;
++	for(t in ts){
++		card[nt] = assign[nt] = 0;
++		ps[nt++] = t.normalizedPosition;
++	}
++
++	for(i=0, dp=dists, avg=0.0; i<nt; i++)
++		for(j=i+1; j<nt; j++)
++			avg += *dp++ = hypot(ps[i].x - ps[j].x, ps[i].y - ps[j].y);
++	avg /= (nt * (nt - 1))/2;
++
++	for(i=0, dp=dists, max=newcid=1; i<nt; i++)
++		for(j=i+1; j<nt; j++){
++			goto *(void *[]){&&l0, &&l1, &&l2, &&l3}[
++				amask = (!assign[j] | !assign[i] << 1) & -(*dp++ < avg)
++			];
++		l3:
++			assign[j] = newcid++;
++		l2:
++			cid = assign[i] = assign[j];
++			goto apply;
++		l1:
++			cid = assign[j] = assign[i];
++		apply:
++			if ((maxtmp = card[cid - 1] += __builtin_popcount(amask)) > max)
++				max = maxtmp;
++		l0:
++			;
++		}
++	_clickFingers = max;
 +}
 +
  - (void)touchesBeganWithEvent:(NSEvent*)e
@@ -93,7 +99,7 @@ index 9e51eec6..24ee0a1c 100644
  	_tapTime = msec();
  }
  - (void)touchesMovedWithEvent:(NSEvent*)e
-@@ -662,8 +710,9 @@ rpc_resizewindow(Client *c, Rectangle r)
+@@ -662,8 +716,9 @@ rpc_resizewindow(Client *c, Rectangle r)
  }
  - (void)touchesEndedWithEvent:(NSEvent*)e
  {
@@ -104,7 +110,7 @@ index 9e51eec6..24ee0a1c 100644
  		&& msec() - _tapTime < 250){
  		switch(_tapFingers){
  		case 3:
-@@ -682,6 +731,7 @@ rpc_resizewindow(Client *c, Rectangle r)
+@@ -682,6 +737,7 @@ rpc_resizewindow(Client *c, Rectangle r)
  - (void)touchesCancelledWithEvent:(NSEvent*)e
  {
  	_tapping = NO;
@@ -112,7 +118,7 @@ index 9e51eec6..24ee0a1c 100644
  }
  
  - (void)getmouse:(NSEvent *)e
-@@ -702,6 +752,16 @@ rpc_resizewindow(Client *c, Rectangle r)
+@@ -702,6 +758,16 @@ rpc_resizewindow(Client *c, Rectangle r)
  		if(m & NSEventModifierFlagCommand)
  			b = 4;
  	}
