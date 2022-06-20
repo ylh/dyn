@@ -1,0 +1,15 @@
+schema = 1
+
+[mod]
+  [mod."github.com/BurntSushi/toml"]
+    version = "v0.3.1"
+    hash = "sha256-Rqak1dE/Aj/+Kx1/pl3Hifgt+Q3OzuZ5fJR+/x3nTbo="
+  [mod."github.com/fhs/9fans-go"]
+    version = "v0.0.0-fhs.20200606"
+    hash = "sha256-r4fcdCG885LmP7VjTlnRpLCyOyIKnBC6wFF88JPLunw="
+  [mod."github.com/google/go-cmp"]
+    version = "v0.3.0"
+    hash = "sha256-Uq5Hevk9jCVtOwrHZqhPPYc3KX/oKJmqoFB/Msjo3cM="
+  [mod."golang.org/x/xerrors"]
+    version = "v0.0.0-20191204190536-9bdfabe68543"
+    hash = "sha256-DCyizuMVp9AhKGv0vL/iRZz/R6jWFmQxDWj1NFeITvo="
