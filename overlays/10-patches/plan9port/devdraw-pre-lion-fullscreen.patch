@@ -1,0 +1,134 @@
+From 84dee0db796537576e2048ff146b7fa638d3aa71 Mon Sep 17 00:00:00 2001
+From: "Yestin L. Harrison" <yestin@ylh.io>
+Date: Tue, 21 Jun 2022 20:46:48 -0700
+Subject: [PATCH] devdraw/mac-screen.m: pre-lion fullscreen
+
+---
+ src/cmd/devdraw/mac-screen.m | 66 +++++++++++++++++++++++++++++++++---
+ 1 file changed, 62 insertions(+), 4 deletions(-)
+
+diff --git a/src/cmd/devdraw/mac-screen.m b/src/cmd/devdraw/mac-screen.m
+index 519478be..81a97871 100644
+--- a/src/cmd/devdraw/mac-screen.m
++++ b/src/cmd/devdraw/mac-screen.m
+@@ -168,10 +168,52 @@ rpc_shutdown(void)
+ }
+ @end
+ 
++@interface DrawWindow : NSWindow
++@property BOOL willTrad;
++@property BOOL isTrad;
++@end
++@implementation DrawWindow
++{
++	NSRect _oldFrame;
++}
++
++- (id)
++initWithContentRect:(NSRect)r
++styleMask:(NSWindowStyleMask)s
++backing:(NSBackingStoreType)b
++defer:(BOOL)d
++{
++	if(self = [super initWithContentRect:r styleMask:s backing:b defer:d])
++		self.willTrad = self.isTrad = NO;
++	return self;
++}
++
++static NSWindowStyleMask tradmask
++	= NSWindowStyleMaskTitled
++	| NSWindowStyleMaskResizable;
++
++- (void)toggleFullScreen:(nullable id)sender
++{
++	if(self.willTrad || self.isTrad)
++		return [super toggleFullScreen:sender];
++
++	if(self.styleMask & tradmask)
++		_oldFrame = self.frame;
++	self.styleMask ^= tradmask;
++	[NSApplication sharedApplication].presentationOptions
++		^= NSApplicationPresentationHideDock
++		 | NSApplicationPresentationHideMenuBar;
++	[self
++		setFrame:self.styleMask & tradmask ? _oldFrame : self.screen.frame
++		display:NO];
++}
++
++@end
++
+ @interface DrawView : NSView<NSTextInputClient,NSWindowDelegate>
+ @property (nonatomic, assign) Client *client;
+ @property (nonatomic, retain) DrawLayer *dlayer;
+-@property (nonatomic, retain) NSWindow *win;
++@property (nonatomic, retain) DrawWindow *win;
+ @property (nonatomic, retain) NSCursor *currentCursor;
+ @property (nonatomic, assign) Memimage *img;
+ 
+@@ -199,6 +241,7 @@ rpc_shutdown(void)
+ 	NSUInteger _clickFingers;
+ 	NSUInteger _tapFingers;
+ 	NSUInteger _tapTime;
++	NSUInteger _magnifyTime;
+ }
+ 
+ - (id)init
+@@ -209,6 +252,7 @@ rpc_shutdown(void)
+ 	_tmpText = [[NSMutableString alloc] initWithCapacity:2];
+ 	_markedRange = NSMakeRange(NSNotFound, 0);
+ 	_selectedRange = NSMakeRange(0, 0);
++	_magnifyTime = msec();
+ 	return self;
+ }
+ 
+@@ -266,7 +310,7 @@ rpc_attach(Client *c, char *label, char *winsize)
+ 	r.size.height = fmin(Dy(wr), r.size.height);
+ 	r = [NSWindow contentRectForFrameRect:r styleMask:Winstyle];
+ 
+-	NSWindow *win = [[NSWindow alloc]
++	DrawWindow *win = [[DrawWindow alloc]
+ 		initWithContentRect:r
+ 		styleMask:Winstyle
+ 		backing:NSBackingStoreBuffered defer:NO];
+@@ -650,8 +694,12 @@ rpc_resizewindow(Client *c, Rectangle r)
+ 
+ - (void)magnifyWithEvent:(NSEvent*)e
+ {
+-	if(fabs([e magnification]) > 0.02)
+-		[[self window] toggleFullScreen:nil];
++	NSUInteger nm;
++
++	if ((nm = msec()) - _magnifyTime <= 250 || fabs([e magnification]) <= 0.02)
++		return;
++	[[self window] toggleFullScreen:nil];
++	_magnifyTime = nm;
+ }
+ 
+ /* macos handily palm-rejects 1 and 2 finger clicks; we're on our own for 3+.
+@@ -1046,6 +1094,15 @@ rpc_setmouse(Client *c, Point p)
+ 	[[NSApplication sharedApplication]
+ 		setPresentationOptions:NSApplicationPresentationHideMenuBar | NSApplicationPresentationHideDock];
+ 	*/
++	self.win.willTrad = YES;
++}
++
++- (void)windowDidEnterFullScreen:(NSNotification*)notification {
++	self.win.isTrad = YES;
++}
++
++- (void)windowWillExitFullScreen:(NSNotification*)notification {
++	self.win.willTrad = NO;
+ }
+ 
+ - (void)windowDidExitFullScreen:(NSNotification*)notification {
+@@ -1053,6 +1110,7 @@ rpc_setmouse(Client *c, Point p)
+ 	[[NSApplication sharedApplication]
+ 		setPresentationOptions:NSApplicationPresentationDefault];
+ 	*/
++	self.win.isTrad = NO;
+ }
+ @end
+ 
+-- 
+2.36.1
+
