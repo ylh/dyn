@@ -141,30 +141,22 @@ in {
     };
   };
 
-  config = mkIf cfg.enable (let
-    etcpop' = {
-      inherit (cfg) users;
-      initrc = lib.concatStringsSep "\n" [
-        "sitesdir=${cfg.sitesDir}"
-        "path=(${lib.concatStringsSep " " ([
-          # this is appended to a snippet in the package that sets
-          # $plan9port and $coreutils
-          "$plan9port/bin" "." "./bin" "./bin/contrib" "$coreutils/bin"
-        ] ++ builtins.map (p: "${p}/bin") cfg.extraPath)})"
-        "formatter=${
-          if cfg.fltrCache then
-            "(fltr_cache ${cfg.formatter})"
-          else
-            cfg.formatter
-        }"
-        cfg.extraConfig
-      ];
-    };
-  in {
+  config = mkIf cfg.enable {
     programs.werc.wrappedPackage = cfg.package.override {
-      etcpop = etcpop';
+      inherit (cfg) users;
+      initrc = ''
+        sitesdir=${cfg.sitesDir}
+        path=(${lib.concatStringsSep " " ([
+          # this is appended to a snippet in the package that sets $plan9port
+          "$plan9port/bin" "." "./bin" "./bin/contrib"
+        ] ++ builtins.map (p: "${p}/bin") cfg.extraPath)})
+        formatter=${
+          if cfg.fltrCache then "(fltr_cache ${cfg.formatter})" else cfg.formatter
+        }
+        ${cfg.extraConfig}
+      '';
       variant = if cfg.formatter == "markdown.pl" then perl else null;
     };
     environment.systemPackages = [ cfg.wrappedPackage ];
-  });
+  };
 }

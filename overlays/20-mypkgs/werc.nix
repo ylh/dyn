@@ -1,50 +1,51 @@
-{ stdenv, lib, variant ? null, plan9port, ed, gawk, coreutils, perl, etcpop ? { } }:
+{ stdenv, lib, plan9port, perl, ed, gawk
+, variant ? null, users ? {}, initrc ? ""}:
 
 assert lib.elem variant [ null "perl" ];
 
-let
-  inherit (lib) concatStringsSep escapeShellArg mapAttrsToList optional;
-  lines = concatStringsSep "\n";
-
-  removals = concatStringsSep " " ([
-    "etc/users/GROUP_AND_USER_ACCOUNTS"
-    "bin/aux"
-    "bin/contrib/{fix-rc-scripts,hgweb*,tcp80,rc-httpd,webserver.rc}"
-  ] ++ optional (variant != "perl") "bin/contrib/markdown.pl");
-
-  initrc = ''
-    . ${plan9port}/plan9/bin/9.rc
-    coreutils=${coreutils}
-    plan9port=$PLAN9;
-  '' + etcpop.initrc or "";
-
-  users = lines (mapAttrsToList (username: { members, password }: let
-    d = "etc/users/${username}";
-    m = if members != null then lines members else null;
-    e = n: c: optional (c != null) "echo ${escapeShellArg c} > ${d}/${n}";
-  in lines ([ "mkdir ${d}" ] ++ e "members" m ++ e "password" password))
-           etcpop.users or {});
-
-in stdenv.mkDerivation rec {
+stdenv.mkDerivation rec {
   pname = "werc";
   version = "1.5.0";
-
   src = builtins.fetchTarball {
     url = "http://werc.cat-v.org/download/werc-${version}.tar.gz";
     sha256 = "0ci86y5983ziyjvz8099p3bqryrq5w2z1wg4jmm8gdbbhvgk4fr6";
   };
-  buildInputs = [ plan9port ed gawk ] ++ optional (variant == "perl") perl;
-
+  
+  buildInputs = [ plan9port ] ++ lib.optional (variant == "perl") perl;
+  nativeBuildInputs = [ ed gawk ];
+  
   phases = "unpackPhase configurePhase installPhase fixupPhase";
-  configurePhase = ''
-    rm -r ${removals}
-    echo ${escapeShellArg initrc} > etc/initrc.local
-    ${users}
+  
+  configurePhase = let
+    echo = arg: "echo ${lib.escapeShellArg arg}";
+  in ''
+    rm -r ${lib.concatStringsSep " " ([
+      "etc/users/GROUP_AND_USER_ACCOUNTS"
+      "bin/aux"
+      "bin/contrib/{fix-rc-scripts,hgweb*,tcp80,rc-httpd,webserver.rc}"
+    ] ++ lib.optional (variant != "perl") "bin/contrib/markdown.pl")}
+    ${echo ''
+      . ${plan9port}/plan9/bin/9.rc
+      plan9port=$PLAN9
+      ${initrc}
+    ''} > etc/initrc.local
+    ${let
+      lines = lib.concatStringsSep "\n";
+      per_user = username: { members, password }:
+        let
+          dir = "etc/users/${username}";
+          echoInto = n: c: lib.optional (c != null) "${echo c} > ${dir}/${n}";
+        in lines ([ "mkdir ${dir}" ]
+        ++ echoInto "members" (if members != null then lines members else null)
+        ++ echoInto "password" password);
+    in lines (lib.mapAttrsToList per_user users)}
   '';
+  
   installPhase = ''
     [ -e $out ] || mkdir -p $out
     cp -r apps bin etc lib pub tpl $out/
   '';
+  
   fixupPhase = ''
     cd $out
     do_ed() { echo "$1"$'\nwq\n' | ed -s $f; }
@@ -73,6 +74,7 @@ in stdenv.mkDerivation rec {
     cgilib 1
     cgilib 2
   '';
+  
   meta = with lib; {
     description = "CGI web framework written in the Plan 9 shell";
     homepage = "http://werc.cat-v.org/";
