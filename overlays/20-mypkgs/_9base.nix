@@ -41,7 +41,7 @@ in stdenv.mkDerivation rec {
     ${ed "sam/Makefile" ''
       /strip/s//''${STRIP}/
     ''}
-    
+
     mkdir pwd
     cat <${pwd} >pwd/pwd.c
     ${ed "pwd/pwd.c" ''
@@ -58,7 +58,7 @@ in stdenv.mkDerivation rec {
       s//pwd/
     ''}
   '';
-  
+
   dontConfigure = true;
   dontPatchShebangs = true;
 
@@ -71,7 +71,7 @@ in stdenv.mkDerivation rec {
     substituteInPlace $out/plan9/bin/9 --replace /bin/sh ${mksh}/bin/mksh
     cp $out/{plan9/,}bin/9
   '';
-  
+
   meta = with lib; {
     description = "revived minimalist port of Plan 9 userland to Unix";
     homepage = "https://tools.suckless.org/9base/";

@@ -10,12 +10,12 @@ stdenv.mkDerivation rec {
     url = "http://werc.cat-v.org/download/werc-${version}.tar.gz";
     sha256 = "0ci86y5983ziyjvz8099p3bqryrq5w2z1wg4jmm8gdbbhvgk4fr6";
   };
-  
+
   buildInputs = [ plan9port ] ++ lib.optional (variant == "perl") perl;
   nativeBuildInputs = [ ed gawk ];
-  
+
   phases = "unpackPhase configurePhase installPhase fixupPhase";
-  
+
   configurePhase = let
     echo = arg: "echo ${lib.escapeShellArg arg}";
   in ''
@@ -40,12 +40,12 @@ stdenv.mkDerivation rec {
         ++ echoInto "password" password);
     in lines (lib.mapAttrsToList per_user users)}
   '';
-  
+
   installPhase = ''
     [ -e $out ] || mkdir -p $out
     cp -r apps bin etc lib pub tpl $out/
   '';
-  
+
   fixupPhase = ''
     cd $out
     do_ed() { echo "$1"$'\nwq\n' | ed -s $f; }
@@ -74,7 +74,7 @@ stdenv.mkDerivation rec {
     cgilib 1
     cgilib 2
   '';
-  
+
   meta = with lib; {
     description = "CGI web framework written in the Plan 9 shell";
     homepage = "http://werc.cat-v.org/";

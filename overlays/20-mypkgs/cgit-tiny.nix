@@ -20,7 +20,7 @@ in stdenv.mkDerivation rec {
   nativeBuildInputs = [ pkg-config asciidoc ];
   buildInputs = [ openssl zlib libxml2 libxslt docbook_xsl ];
   outputs = [ "bin" "out" ];
-  
+
   postPatch = ''
     sed -e 's|"gzip"|"${gzip}/bin/gzip"|' \
         -e 's|"bzip2"|"${bzip2.bin}/bin/bzip2"|' \
@@ -51,8 +51,8 @@ in stdenv.mkDerivation rec {
     "CC=${stdenv.cc.targetPrefix}cc"
     "AR=${stdenv.cc.targetPrefix}ar"
   ];
-  
+
   installTargets = [ "install" "install-man" ];
-  
+
   stripDebugFlags = "--strip-unneeded";
 }

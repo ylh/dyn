@@ -3,21 +3,21 @@
 { config, pkgs, lib, ... }: with lib; with types; let
   long = "Common Gateway Daemon";
   cfg = config.services.cgd;
-  
+
   srv' = n: suffix: "<filename>cgd@${
     if n != "" then "<replaceable>${n}</replaceable>" else ""
   }.service${suffix}</filename>";
   srv = srv' "name" "";
-  
+
   assignmentOf = x: "_CGD${x}";
   varOf = x: "\$${assignmentOf x}";
-  
+
   attrPath = listOf str // {
     description = "attribute path";
     check = x: isList x;
     merge = mergeEqualOption;
   };
-  
+
   # the names here enumerate the config options that influence cli args
   cgdArgs = {
     # ABSOLUTELY DISGUSTING - functions in here handle the closing quote
@@ -32,11 +32,11 @@
   };
   cgdArgOf = n: v: "Environment=\"${assignmentOf n}=${cgdArgs.${n} v}";
   cgdArgAt = i: n: cgdArgOf n i.${n};
-  
+
   catMapLines = f: concatMapStrings (x: let
     app = f x;
   in if app == "" then "" else "\n" + app);
-  
+
   # shr enumerates config options that have configurable defaults
   shr.env = mkOption {
     type = attrsOf str;
@@ -102,11 +102,11 @@
       <literal>[Service]</literal>.
     '';
   };
-    
+
   vNames = attrNames cgdArgs;
   iNames = subtractLists (attrNames shr) vNames; # only in instances
   dNames = intersectLists (attrNames shr) vNames; # in instances & base
-  
+
   # the names specified right here should == iNames
   inst.options = {
     addr = mkOption {
@@ -182,11 +182,11 @@ in {
       else
         name);
     in recursiveUpdate acc new) {} rdeps';
-    
+
     systemd.units."cgd@.service".text = ''
       [Unit]
       Description=Common Gateway Demon (wrapping %i)
-      
+
       [Service]
       ExecStart=${cfg.package}/bin/cgd ${
         concatMapStringsSep " " varOf vNames
