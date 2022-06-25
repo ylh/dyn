@@ -157,6 +157,5 @@ in {
       '';
       variant = if cfg.formatter == "markdown.pl" then perl else null;
     };
-    environment.systemPackages = [ cfg.wrappedPackage ];
   };
 }
