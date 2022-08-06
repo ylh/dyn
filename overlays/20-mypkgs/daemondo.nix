@@ -1,14 +1,16 @@
-{
-  stdenv, lib, fetchFromGitHub,
-  curl, sqlite, tcl,
-  CoreFoundation, SystemConfiguration, IOKit
-}: stdenv.mkDerivation rec {
+{ stdenv, lib, fetchFromGitHub
+, curl, sqlite, tcl
+, CoreFoundation, SystemConfiguration, IOKit
+, mtree # mtree is currently broken in file_cmds so use netbsd's for now
+}:
+stdenv.mkDerivation rec {
   pname = "daemondo";
   version = "2.7.2";
 
   buildInputs = [
     curl sqlite tcl
     CoreFoundation SystemConfiguration IOKit
+    mtree
   ];
 
   src = fetchFromGitHub {

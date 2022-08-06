@@ -6,6 +6,7 @@ self: super: let
     };
     daemondo.args = {
       inherit (frameworks) CoreFoundation SystemConfiguration IOKit;
+      inherit (self.netbsd) mtree;
     };
     afro.caller = super.python3Packages;
   };
