@@ -1,5 +1,5 @@
 with builtins;
-{ lib ? (import <nixpkgs> {}).lib, ... }: let
+lib: let
   extFn = n: v: _self: super: let a = v { lib = super; }; in {
     ${n} = super.${n} or {} // a;
   } // a;

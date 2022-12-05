@@ -46,7 +46,7 @@ in {
       else "${unstable}";
     })
     (self: super: {
-      lib = mylib' { inherit (super) lib; };
+      lib = mylib' super.lib;
     })
     (self: super:
       super.lib.composeManyExtensions (
