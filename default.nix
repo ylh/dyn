@@ -3,8 +3,6 @@
   excl ? [],              # files to exclude from search
   defaultExcludes ? true, # you do not want to set this to false
   imports ? [],           # pin home-manager etc here
-  unstable ? null,        # need unstable? pin its derivation here
-  enhancePins ? false,    # add mylib to imports. generally unnecessary
   others ? false,         # do not present as a singleton list
   contagious ? false,     # provide dyn(.enhance) as a module argument
   ...
@@ -16,7 +14,7 @@ let me = { lib, pkgs, ... }: let
   ] ++ lib.optional (contrib == ../.) "dyn";
   pathElse = f: p: d: if pathExists p then f p else d;
   mylib' = import ./mylib;
-  mylib = mylib' { inherit lib; };
+  mylib = mylib' lib;
 
   enhanceBy = name: value: mylib.applyIf lib.isFunction (m': let
     initArgs = lib.functionArgs m';
@@ -30,28 +28,19 @@ let me = { lib, pkgs, ... }: let
     }))
     (enhanceBy "lib" mylib);
 
-  isP = x: isPath x || isString x;
-  enhance = mylib.compose enhance' (mylib.applyIf isP import);
+  importIfPath = mylib.applyIf (x: isPath x || isString x) import;
+  enhance = mylib.compose enhance' importIfPath;
   paths = mylib.hereFlatPaths ./modules ++
     mylib.hereFlatPaths (mylib.listingExcept contrib excludes);
 in {
-  imports = map enhance paths ++ (if enhancePins then
-    map enhance imports
-  else
-    imports);
+  imports = map enhance paths ++ imports;
   nixpkgs.overlays = [
-    (self: super: {
-      unstablePath = if unstable == null then
-        super.path
-      else "${unstable}";
-    })
-    (self: super: {
-      lib = mylib' super.lib;
-    })
+    (self: super: { lib = mylib' super.lib; })
     (self: super:
       super.lib.composeManyExtensions (
-        super.lib.hereFlatList ./overlays
-     ++ pathElse super.lib.hereFlatList (contrib + "/overlays") []) self super
+           super.lib.hereFlatList ./overlays
+        ++ pathElse super.lib.hereFlatList (contrib + "/overlays") []
+      ) self super
     )
   ];
 }; in if others then me else [ me ]
