@@ -1,19 +1,24 @@
-{ stdenv, fetchFromGitHub, python37 }: stdenv.mkDerivation rec {
+{ stdenv, fetchFromGitHub, python38 }: stdenv.mkDerivation rec {
   pname = "iterm2-shell-integration";
-  version = "2021-10-28";
+  version = "2023-02-12";
   src = fetchFromGitHub {
     owner = "gnachman";
-    repo = "iTerm2-shell-integration";
-    rev = "6663e257ea68e76d4b926e5b970065c7551096b7";
-    sha256 = "cJgB3R9qiao74PifgLgQRTmvgp0QNHAiEzVqN4XAmrM=";
+    repo = "iterm2-shell-integration";
+    rev = "a837722a3ba413bcf9cb73f1ffd1b0bd4b9f183e";
+    sha256 = "c1LWcQtl6rPoJ8uYh3+Cvd1g+1/daqtqt1eKPmFkjnI=";
   };
 
-  nativeBuildInputs = [ python37 ];
+  nativeBuildInputs = [ python38 ];
   dontConfigure = true;
   dontBuild = true;
+  dontPatchShebangs = true;
+  dontStrip = true;
   installPhase = ''
     mkdir -p $out/bin
     cp shell_integration/{ba,fi,tc,z}sh $out/
     cp utilities/* $out/bin/
+  '';
+  postFixup = ''
+  	patchShebangs $out/bin
   '';
 }
